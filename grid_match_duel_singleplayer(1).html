@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>网格消消乐 · 单机版</title>
+<style>
+:root{--ink:#17213b;--muted:#687590;--blue:#536be0;--blue-light:#e9edff;--orange:#ef8a45;--green:#269b78;--paper:#f5f7fc;--line:#e0e6f2}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 50% -10%,#e3e9ff 0,#f5f7fc 52%,#fbfcff 100%);font-family:system-ui,-apple-system,"Segoe UI","Microsoft YaHei",sans-serif;color:var(--ink);padding:24px 14px 36px}
+.app{width:min(100%,960px);margin:auto}.eyebrow{display:flex;align-items:center;gap:9px;color:#7a87bd;font-size:.8rem;font-weight:850;letter-spacing:.12em}.spark{height:9px;width:9px;border-radius:50%;background:var(--orange);box-shadow:0 0 0 5px #fbe8dc}
+h1{font-size:clamp(1.75rem,4vw,2.7rem);letter-spacing:-.045em;margin:12px 0 5px}.subtitle{margin:0 0 20px;color:var(--muted)}
+.panel{background:#ffffffdf;border:1px solid #fff;border-radius:24px;box-shadow:0 18px 55px #26365c12;padding:clamp(13px,3vw,25px)}
+.top-controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-bottom:16px}.modes{display:flex;gap:6px;background:#f0f2f9;padding:4px;border-radius:13px}.mode{border:0;background:transparent;color:#66728c;border-radius:10px;padding:9px 12px;font:inherit;font-size:.9rem;font-weight:750;cursor:pointer}.mode.active{background:#fff;color:var(--blue);box-shadow:0 2px 8px #293b6a12}.small-actions{display:flex;gap:7px}.icon-btn{border:1px solid var(--line);background:#fff;color:#4c5975;border-radius:11px;padding:9px 11px;font:inherit;font-size:.88rem;cursor:pointer}
+.scorebar{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;margin-bottom:15px}.player{border:1px solid var(--line);border-radius:16px;padding:12px 15px;background:#fff;transition:.2s}.player.active{border-color:#9aabff;background:var(--blue-light);box-shadow:inset 0 0 0 1px #c7d1ff}.player:last-child{text-align:right}.player-name{font-weight:800;font-size:.94rem}.score{font-size:1.8rem;font-weight:900;line-height:1.2;margin-top:3px;font-variant-numeric:tabular-nums}.turn{text-align:center;color:var(--muted);font-size:.82rem;white-space:nowrap}.turn strong{display:block;color:var(--orange);font-size:1.35rem}.turn-banner{position:fixed;z-index:4;left:50%;top:18%;transform:translate(-50%,-12px) scale(.92);padding:17px 30px;border-radius:18px;background:#17213bf2;color:#fff;font-size:clamp(1.35rem,4vw,2.2rem);font-weight:950;letter-spacing:.04em;box-shadow:0 16px 50px #0004;opacity:0;pointer-events:none;transition:opacity .18s,transform .18s}.turn-banner.show{opacity:1;transform:translate(-50%,0) scale(1)}.turn-banner.red{background:linear-gradient(135deg,#c92f46,#f05a62)}.turn-banner.blue{background:linear-gradient(135deg,#2455c7,#4f8bff)}.turn-banner.ai{background:linear-gradient(135deg,#4b5563,#111827)}
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin:7px 0 16px}.level{font-weight:800}.level small{display:block;color:var(--muted);font-weight:500;margin-top:3px}.timerwrap{display:flex;align-items:center;gap:9px;color:var(--muted);font-size:.88rem}.timer{font-size:1.35rem;font-weight:900;font-variant-numeric:tabular-nums;color:var(--orange);min-width:23px}.track{height:7px;width:95px;background:#edf0f7;border-radius:99px;overflow:hidden}.fill{height:100%;width:100%;background:var(--orange);border-radius:99px;transition:width .15s linear}
+.board{display:grid;gap:8px;max-width:680px;margin:0 auto;perspective:1000px}.card{border:0;padding:0;background:transparent;aspect-ratio:1;min-width:0;cursor:pointer;position:relative;transform-style:preserve-3d}.card-inner{position:absolute;inset:0;transition:transform .34s cubic-bezier(.2,.7,.2,1);transform-style:preserve-3d}.card.flipped .card-inner,.card.matched .card-inner{transform:rotateY(180deg)}.face{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;border-radius:clamp(8px,2vw,15px);backface-visibility:hidden;border:1px solid #d9e0f1;box-shadow:0 3px 0 #dce2f0;font-size:clamp(1.05rem,4.2vw,2.2rem);user-select:none}.front{background:linear-gradient(145deg,#6a7ff0,#465dd0);color:#fff;font-weight:900}.front:after{content:"✦";font-size:.8em;color:#ffffffa8}.back{transform:rotateY(180deg);background:#fff}.card.matched .back{background:#e5f7f0;border-color:#a8dfcb;box-shadow:0 3px 0 #c4e9db}.card.matched{animation:match-pop .35s ease}.card:disabled{cursor:default}.card:disabled:not(.matched){opacity:1}
+@keyframes match-pop{0%{transform:scale(1)}45%{transform:scale(1.09)}100%{transform:scale(1)}}@keyframes wrong-shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}.card.wrong{animation:wrong-shake .24s ease}
+.status{display:flex;align-items:center;gap:10px;margin:18px 0 0;padding:12px 14px;background:#f7f8fc;border:1px solid var(--line);border-radius:14px;color:#4d5a75;min-height:48px}.status-mark{width:8px;height:8px;border-radius:50%;background:var(--green);flex:none}.actions{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:16px}.action{border:0;border-radius:12px;padding:11px 16px;font:inherit;font-weight:800;cursor:pointer;transition:transform .15s,filter .15s}.action:hover{filter:brightness(.97);transform:translateY(-1px)}.action:active{transform:translateY(0)}.primary{background:var(--blue);color:white;box-shadow:0 5px 12px #526be02a}.secondary{background:#edf0f8;color:#34415e}.leaderboard{margin-top:16px;background:#f7f8fc;border:1px solid var(--line);border-radius:15px;padding:14px 16px}.leader-head{display:flex;justify-content:space-between;align-items:center;gap:10px}.leader-head strong{font-size:.94rem}.leader-head span{font-size:.8rem;color:var(--muted)}.leader-list{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.record{background:white;border:1px solid var(--line);border-radius:10px;padding:8px 10px;color:#4d5a75;font-size:.83rem}.record b{color:var(--blue)}.empty{color:var(--muted);font-size:.85rem;margin:10px 0 0}.rules-panel{color:var(--muted);font-size:.9rem;line-height:1.75;margin:16px 3px 0;background:#f7f8fc;border:1px solid var(--line);border-radius:15px;padding:13px 16px}.rules-panel summary{cursor:pointer;color:var(--ink);font-weight:850}.rules-content{padding-top:8px}.rules-content p{margin:9px 0}.rules-content ul{padding-left:22px;margin:6px 0 12px}.rules-content strong{color:#34415e}
+.overlay{position:fixed;inset:0;background:#17213b78;display:flex;align-items:center;justify-content:center;padding:20px;z-index:5;backdrop-filter:blur(5px)}.dialog{width:min(100%,430px);background:#fff;border-radius:24px;padding:27px;box-shadow:0 25px 80px #0003;text-align:center;animation:dialog-in .24s ease}.dialog .emoji{font-size:2.7rem}.dialog h2{margin:8px 0}.dialog p{color:var(--muted);line-height:1.7;white-space:pre-line}.hidden{display:none!important}@keyframes dialog-in{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}
+@media(max-width:560px){body{padding:16px 9px 25px}.panel{border-radius:18px}.scorebar{gap:7px}.player{padding:10px}.score{font-size:1.5rem}.turn{font-size:.72rem}.turn strong{font-size:1.2rem}.board{gap:5px}.track{width:65px}.mode{padding:8px 9px;font-size:.83rem}.top-controls{align-items:flex-start}.small-actions{margin-left:auto}}
+body.dark{--ink:#edf1ff;--muted:#a7b2d0;--blue:#8da0ff;--blue-light:#26345d;--paper:#101522;--line:#303b55;background:radial-gradient(ellipse at 50% -10%,#202b49 0,#111827 55%,#0b1020 100%);color:var(--ink)}body.dark .panel,body.dark .player,body.dark .icon-btn,body.dark .back{background:#1a2234;color:var(--ink);border-color:#303b55}body.dark .modes,body.dark .status,body.dark .leaderboard,body.dark .rules-panel{background:#151d2e;border-color:#303b55;color:var(--muted)}body.dark .mode.active{background:#27334e;color:#dce3ff}body.dark .player.active{background:#26345d;border-color:#6178ce}body.dark .record{background:#1a2234;color:var(--ink);border-color:#303b55;color:#d5dcf1}body.dark .rules-content strong{color:#e2e8ff}body.dark .dialog{background:#1a2234;color:var(--ink)}body.dark .front{background:linear-gradient(145deg,#4b5cba,#2d3d8d)}body.dark .track{background:#303b55}body.dark .subtitle{color:var(--muted)}@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<main class="app">
+  <div class="eyebrow"><span class="spark"></span> WEEK 05 · MINI GAME</div>
+  <h1>网格消消乐 <span style="color:var(--blue)">·</span> 单机版</h1>
+  <p class="subtitle">记住每一张牌的位置，靠观察和记忆赢下对局。</p>
+  <section class="panel">
+    <div class="top-controls">
+      <div class="modes" role="group" aria-label="游戏模式">
+        <button class="mode active" id="localMode">双人对战</button>
+        <button class="mode" id="aiMode">挑战电脑</button>
+      </div>
+      <div class="small-actions">
+        <button class="icon-btn" id="soundBtn" aria-pressed="true">🔊 音效开</button>
+        <button class="icon-btn" id="themeBtn" aria-pressed="false">🌙 夜间</button>
+        <label class="icon-btn" id="difficultyWrap" style="display:none">🤖 难度 <select id="difficulty" style="border:0;background:transparent;color:inherit;font:inherit;font-weight:750;max-width:92px"><option value="easy">简单</option><option value="normal" selected>普通</option><option value="hard">困难</option></select></label>
+        <button class="icon-btn" id="hintBtn" title="显示规则提示">ⓘ 规则</button>
+      </div>
+    </div>
+    <div class="scorebar">
+      <div class="player active" id="player0"><div class="player-name" id="name0">🔴 红方</div><div class="score" id="score0">0</div></div>
+      <div class="turn">当前回合<strong id="turnPlayer">🔴 红方回合</strong></div>
+      <div class="player" id="player1"><div class="player-name" id="name1">🔵 蓝方</div><div class="score" id="score1">0</div></div>
+    </div>
+    <div class="toolbar">
+      <div class="level" id="levelText">第 1 / 3 关<small>4 × 4 网格 · 找到相同图案</small></div>
+      <div class="timerwrap"><span>回合倒计时</span><span class="timer" id="timer">10</span><div class="track"><div class="fill" id="timerFill"></div></div></div>
+    </div>
+    <div class="board" id="board" aria-label="游戏棋盘"></div>
+    <div class="status" aria-live="polite"><span class="status-mark"></span><span id="statusText">点击“开始游戏”开始对战。</span></div>
+    <div class="actions"><button class="action secondary" id="restartBtn">↻ 重新开始</button><button class="action primary" id="startBtn">开始游戏 →</button></div>
+    <section class="leaderboard">
+      <div class="leader-head"><strong>🏆 本机最佳战绩</strong><span>保存在当前浏览器</span></div>
+      <div class="leader-list" id="leaderList"></div>
+      <p class="empty hidden" id="emptyRecords">完成一局后，这里会记录你的最佳成绩。</p>
+    </section>
+  </section>
+  <details class="rules-panel" id="rulesPanel">
+    <summary>📖 游戏规则介绍（点击展开 / 收起）</summary>
+    <div class="rules-content">
+      <p><strong>🎯 游戏目标</strong><br>翻开牌面，找出所有相同图案。三关结束后，分数更高的一方获胜。</p>
+      <p><strong>🔴🔵 双人回合</strong><br>红方（玩家 1）先手，蓝方（玩家 2）后手。每次轮到一方时，可以翻开两张牌。</p>
+      <ul><li><strong>配对成功：</strong>得 1 分，保持当前回合，可以继续翻牌。</li><li><strong>配对失败：</strong>两张牌短暂展示后盖回，自动切换到另一方。</li><li><strong>回合超时：</strong>倒计时结束后自动换方。</li></ul>
+      <p><strong>⏱️ 关卡与时间</strong><br>第 1 关：4×4 棋盘，每回合 10 秒；第 2 关：6×6 棋盘，每回合 9 秒；第 3 关：8×8 棋盘，每回合 8 秒。</p>
+      <p><strong>🤖 挑战电脑与难度</strong><br>简单：电脑记忆不稳定，经常随机翻牌；普通：电脑记住自己见过的牌；困难：电脑能掌握全部牌面并优先配对。难度可在顶部切换。</p>
+      <p><strong>🌗 白天 / 黑夜</strong><br>点击顶部的白天/夜间按钮，可随时切换界面主题。</p>
+      <p><strong>💾 单机说明</strong><br>无需登录、房间码或服务器。直接在浏览器打开本 HTML 文件即可游玩；本机最佳战绩保存在当前浏览器中。</p>
+    </div>
+  </details>
+</main>
+<div id="turnBanner" class="turn-banner" aria-live="assertive">🔴 红方回合</div>
+<div class="overlay" id="overlay">
+  <div class="dialog">
+    <div class="emoji" id="dialogEmoji">🧩</div><h2 id="dialogTitle">准备好了吗？</h2>
+    <p id="dialogText">选择双人对战，或挑战电脑。\n找出所有配对，争取更高分！</p>
+    <button class="action primary" id="dialogBtn">开始对战</button>
+  </div>
+</div>
+<script>
+(()=>{
+const levels=[{size:4,seconds:10},{size:6,seconds:9},{size:8,seconds:8}];
+const symbols=["🍎","🍋","🍇","🍒","🍉","🍓","🥝","🍍","🥑","🥕","🌽","🍄","🐶","🐱","🐼","🦊","🐸","🐵","🦁","🐯","🐧","🦉","🦋","🐢","⭐","🌙","☀️","⚽","🎲","🎸","🚗","🚀"];
+const $=id=>document.getElementById(id);
+let levelIndex=0,scores=[0,0],currentPlayer=0,cards=[],flipped=[],matched=new Set(),memory=[new Map(),new Map()];
+let timeLeft=10,timerId=null,hideId=null,aiId=null,locked=true,started=false,gameFinished=false,mode="local",soundOn=true,audioCtx=null,gameStart=0,difficulty="normal",bannerTimer=null;
+function shuffle(a){for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function stopTimer(){if(timerId!==null){clearInterval(timerId);timerId=null}}
+function clearJobs(){stopTimer();if(hideId!==null){clearTimeout(hideId);hideId=null}if(aiId!==null){clearTimeout(aiId);aiId=null}}
+function status(t){$("statusText").textContent=t}
+function tone(freq=500,duration=.09,type="sine",volume=.09){if(!soundOn)return;try{audioCtx=audioCtx||new(window.AudioContext||window.webkitAudioContext)();const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type=type;o.frequency.value=freq;g.gain.setValueAtTime(volume,audioCtx.currentTime);g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+duration);o.connect(g);g.connect(audioCtx.destination);o.start();o.stop(audioCtx.currentTime+duration)}catch(e){}}
+function sfx(kind){if(kind==="flip")tone(430,.075,"triangle",.075);if(kind==="match"){tone(660,.09);setTimeout(()=>tone(880,.12),65)}if(kind==="wrong")tone(180,.16,"sawtooth",.065);if(kind==="win"){tone(523,.13);setTimeout(()=>tone(659,.13),110);setTimeout(()=>tone(784,.2),220)}}
+function showTurnBanner(){const el=$("turnBanner");const label=currentPlayer===0?"🔴 红方回合":(mode==="ai"?"🤖 电脑回合":"🔵 蓝方回合");el.textContent=label;el.className="turn-banner show "+(currentPlayer===0?"red":(mode==="ai"?"ai":"blue"));if(bannerTimer)clearTimeout(bannerTimer);bannerTimer=setTimeout(()=>el.classList.remove("show"),1250)}
+function renderScores(){$("score0").textContent=scores[0];$("score1").textContent=scores[1];$("player0").classList.toggle("active",currentPlayer===0&&!gameFinished);$("player1").classList.toggle("active",currentPlayer===1&&!gameFinished);$("turnPlayer").textContent=currentPlayer===0?"🔴 红方回合":(mode==="ai"?"🤖 电脑回合":"🔵 蓝方回合");$("name0").textContent="🔴 红方";$("name1").textContent=mode==="ai"?"🤖 电脑":"🔵 蓝方"}
+function renderTimer(){const max=levels[levelIndex].seconds;$("timer").textContent=timeLeft;$("timerFill").style.width=`${Math.max(0,timeLeft/max*100)}%`;$("timerFill").style.background=timeLeft<=3?"#e34e55":"var(--orange)"}
+function renderLevel(){$("levelText").innerHTML=`第 ${levelIndex+1} / ${levels.length} 关<small>${levels[levelIndex].size} × ${levels[levelIndex].size} 网格 · 找到相同图案</small>`}
+function startTimer(){stopTimer();if(!started||locked||gameFinished||currentPlayer===1&&mode==="ai")return;timerId=setInterval(()=>{timeLeft--;renderTimer();if(timeLeft<=0){stopTimer();if(flipped.length===1){const i=flipped[0];flipped=[];const c=$("board").children[i];c.classList.remove("flipped");c.disabled=false}status(`${currentPlayer===1&&mode==="ai"?"电脑":"玩家 "+(currentPlayer+1)}超时，自动换人！`);nextTurn()}},1000)}
+function nextTurn(){currentPlayer=1-currentPlayer;timeLeft=levels[levelIndex].seconds;renderScores();renderTimer();showTurnBanner();if(mode==="ai"&&currentPlayer===1){locked=true;status("电脑正在观察牌面……");aiId=setTimeout(aiPlay,650)}else{locked=false;startTimer()}}
+function buildBoard(){const size=levels[levelIndex].size,count=size*size/2;cards=shuffle([...symbols.slice(0,count),...symbols.slice(0,count)]);flipped=[];matched=new Set();memory=[new Map(),new Map()];locked=false;const board=$("board");board.innerHTML="";board.style.gridTemplateColumns=`repeat(${size},minmax(0,1fr))`;cards.forEach((symbol,index)=>{const b=document.createElement("button");b.className="card";b.type="button";b.setAttribute("aria-label",`第 ${index+1} 张牌`);b.innerHTML=`<span class="card-inner"><span class="face front"></span><span class="face back">${symbol}</span></span>`;b.addEventListener("click",()=>flip(index,b,false));board.appendChild(b)});renderLevel();timeLeft=levels[levelIndex].seconds;renderTimer();renderScores()}
+function reveal(i,rememberPlayer){const b=$("board").children[i];b.classList.add("flipped");b.disabled=true;sfx("flip");if(rememberPlayer!==null)memory[rememberPlayer].set(i,cards[i]);}
+function flip(index,button,fromAI=false){if(!started||gameFinished||locked||matched.has(index)||flipped.includes(index))return;if(mode==="ai"&&currentPlayer===1&&!fromAI)return;reveal(index,currentPlayer);flipped.push(index);if(flipped.length===1){status(`${currentPlayer===1&&mode==="ai"?"电脑":"玩家 "+(currentPlayer+1)}已翻开第一张牌，再选一张。`);return}stopTimer();const[a,b]=flipped;if(cards[a]===cards[b]){matched.add(a);matched.add(b);$("board").children[a].classList.add("matched");$("board").children[b].classList.add("matched");scores[currentPlayer]++;flipped=[];renderScores();sfx("match");status(`配对成功！${currentPlayer===1&&mode==="ai"?"电脑":`玩家 ${currentPlayer+1}`}得 1 分，可以继续。`);if(matched.size===cards.length){setTimeout(finishLevel,600)}else if(mode==="ai"&&currentPlayer===1){locked=true;aiId=setTimeout(aiPlay,600)}else{timeLeft=levels[levelIndex].seconds;renderTimer();startTimer()}}else{locked=true;sfx("wrong");$("board").children[a].classList.add("wrong");$("board").children[b].classList.add("wrong");hideId=setTimeout(()=>{hideId=null;[a,b].forEach(i=>{const c=$("board").children[i];c.classList.remove("flipped","wrong");c.disabled=false});flipped=[];status("没有配对成功，换另一位玩家。");nextTurn()},850)}}
+function aiPlay(){aiId=null;if(!started||gameFinished||currentPlayer!==1||mode!=="ai")return;locked=false;stopTimer();timeLeft=levels[levelIndex].seconds;renderTimer();const known=memory[1];if(difficulty==="hard")cards.forEach((symbol,i)=>{if(!matched.has(i))known.set(i,symbol)});const available=[...known.entries()].filter(([i])=>!matched.has(i));let pair=null;for(let i=0;i<available.length;i++){for(let j=i+1;j<available.length;j++){if(available[i][1]===available[j][1]){pair=[available[i][0],available[j][0]];break}}if(pair)break}
+let first,second;if(pair&&(difficulty!=="easy"||Math.random()<0.35)){[first,second]=pair}else{const unknown=cards.map((_,i)=>i).filter(i=>!matched.has(i)&&!known.has(i));const candidates=cards.map((_,i)=>i).filter(i=>!matched.has(i));first=unknown.length?unknown[Math.floor(Math.random()*unknown.length)]:candidates[Math.floor(Math.random()*candidates.length)];const rest=candidates.filter(i=>i!==first);second=rest[Math.floor(Math.random()*rest.length)]}
+flip(first,$("board").children[first],true);if(flipped.length===1){aiId=setTimeout(()=>{if(!gameFinished&&flipped.length===1)flip(second,$("board").children[second],true)},560)}}
+function finishLevel(){stopTimer();if(levelIndex<levels.length-1){showDialog("🎉",`第 ${levelIndex+1} 关完成！`,`当前比分：玩家 1 ${scores[0]} 分 · ${mode==="ai"?"电脑":"玩家 2"} ${scores[1]} 分\n准备进入第 ${levelIndex+2} 关。`,"下一关",()=>{levelIndex++;currentPlayer=0;buildBoard();hideDialog();locked=false;status("新关卡开始，🔴 红方先手。");startTimer()})}else{gameFinished=true;started=false;locked=true;renderScores();let result=scores[0]>scores[1]?"玩家 1 获胜！":scores[1]>scores[0]?(mode==="ai"?"电脑获胜！":"玩家 2 获胜！"):"平局！";sfx("win");status(`游戏结束：${result}`);saveRecord();renderRecords();showDialog("🏆",result,`最终比分\n玩家 1：${scores[0]} 分\n${mode==="ai"?"电脑":"玩家 2"}：${scores[1]} 分`,"再玩一次",restartGame)}}
+function showDialog(emoji,title,text,btn,fn){$("dialogEmoji").textContent=emoji;$("dialogTitle").textContent=title;$("dialogText").textContent=text;$("dialogBtn").textContent=btn;$("dialogBtn").onclick=fn;$("overlay").classList.remove("hidden")}
+function hideDialog(){$("overlay").classList.add("hidden")}
+function begin(){started=true;gameFinished=false;locked=false;gameStart=Date.now();hideDialog();showTurnBanner();status(mode==="ai"?"游戏开始！你作为红方先手，注意记住牌的位置。":"游戏开始！🔴 红方先手。");startTimer()}
+function restartGame(){clearJobs();levelIndex=0;scores=[0,0];currentPlayer=0;gameFinished=false;started=false;locked=true;buildBoard();locked=true;status("点击“开始游戏”开始对战。");showDialog("🧩","准备好了吗？",mode==="ai"?"挑战电脑：它会记住自己翻过的牌。\n你先手，试着比电脑记得更多！":"两名玩家共用一台电脑，红方与蓝方轮流点击牌面。\n找出所有配对，争取更高分！","开始对战",begin)}
+function saveRecord(){try{const key="grid-match-duel-records-v2";let list=JSON.parse(localStorage.getItem(key)||"[]");list.push({mode,score:scores[0],opponent:scores[1],date:new Date().toLocaleDateString("zh-CN"),win:scores[0]>scores[1]});list.sort((a,b)=>b.score-a.score||(b.win-a.win));localStorage.setItem(key,JSON.stringify(list.slice(0,5)))}catch(e){}}
+function renderRecords(){let list=[];try{list=JSON.parse(localStorage.getItem("grid-match-duel-records-v2")||"[]")}catch(e){}const root=$("leaderList");root.innerHTML="";$("emptyRecords").classList.toggle("hidden",list.length>0);list.forEach((r,i)=>{const item=document.createElement("div");item.className="record";item.innerHTML=`<b>#${i+1}</b>　${r.mode==="ai"?"挑战电脑":"双人"} · ${r.score} 分　<span style="color:#8993a8">${r.date}</span>`;root.appendChild(item)})}
+$("startBtn").onclick=()=>{if(!started)begin();else status("游戏正在进行，继续寻找配对！")};$("restartBtn").onclick=restartGame;
+$("localMode").onclick=()=>{if(started){showDialog("🔄","切换游戏模式？","切换模式会重新开始当前对局。","切换并重开",()=>{mode="local";setModeButtons();restartGame()});return}mode="local";setModeButtons();restartGame()};
+$("aiMode").onclick=()=>{if(started){showDialog("🤖","切换游戏模式？","切换模式会重新开始当前对局。","挑战电脑",()=>{mode="ai";setModeButtons();restartGame()});return}mode="ai";setModeButtons();restartGame()};
+function setModeButtons(){$("localMode").classList.toggle("active",mode==="local");$("aiMode").classList.toggle("active",mode==="ai");$("difficultyWrap").style.display=mode==="ai"?"inline-flex":"none";renderScores()}
+$("soundBtn").onclick=()=>{soundOn=!soundOn;$("soundBtn").textContent=soundOn?"🔊 音效开":"🔇 音效关";$("soundBtn").setAttribute("aria-pressed",String(soundOn));if(soundOn)tone(520,.07)};
+$("difficulty").onchange=e=>{difficulty=e.target.value;if(mode==="ai")restartGame()};
+$("themeBtn").onclick=()=>{const dark=document.body.classList.toggle("dark");$("themeBtn").textContent=dark?"☀️ 白天":"🌙 夜间";$("themeBtn").setAttribute("aria-pressed",String(dark));};
+$("hintBtn").onclick=()=>{const panel=$("rulesPanel");panel.open=!panel.open; if(panel.open) panel.scrollIntoView({behavior:"smooth",block:"nearest"});};
+renderRecords();setModeButtons();buildBoard();locked=true;showDialog("🧩","准备好了吗？","选择双人对战，或挑战电脑。\n找出所有配对，争取更高分！","开始对战",begin);
+})();
+</script>
+</body>
+</html>
